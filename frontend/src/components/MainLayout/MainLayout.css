@@ -1,0 +1,187 @@
+@import "../../assets/styles/theme.css";
+
+/* ลบ Margin/Padding พื้นฐานของ Browser ออกเพื่อไม่ให้เกิดแถบขาวขอบจอ */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* โครงสร้างหน้าเว็บหลัก แบ่งเป็น 2 คอลัมน์ (Sidebar ซ้าย + Content ขวา) */
+.app-layout {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  width: 100%; /* เปลี่ยนจาก 100vw เพื่อป้องกัน Scrollbar แนวนอนซ้อน */
+  height: 100vh;
+  font-family: var(--font-body);
+  color: var(--color-text);
+  overflow: hidden;
+}
+
+/* ---------- Sidebar ด้านซ้าย ---------- */
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  padding: 28px 20px;
+  background: var(--color-black);
+  color: #ffffff;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px;
+  margin-bottom: 36px;
+}
+
+.brand-icon {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--color-red);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+
+.brand-name {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.68);
+  background: none;
+  border: none;
+  border-left: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-decoration: none;
+  text-align: left;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.menu-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.menu-item.active {
+  color: #ffffff;
+  background: rgba(200, 30, 58, 0.16);
+  border-left: 2px solid var(--color-red);
+}
+
+.menu-icon {
+  width: 18px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.logout-btn {
+  padding: 11px 12px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.logout-btn:hover {
+  color: #ffffff;
+  border-color: var(--color-red);
+}
+
+/* ---------- พื้นที่แสดงเนื้อหาฝั่งขวา ---------- */
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  padding: 32px 40px 40px;
+  overflow-y: auto; /* ให้เลื่อนลงเฉพาะเนื้อหาฝั่งขวาจุดเดียว */
+  height: 100%;
+  background: var(--color-bg);
+  box-sizing: border-box;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 760px) {
+  .app-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .sidebar {
+    flex-direction: row;
+    align-items: center;
+    padding: 14px 16px;
+    overflow-x: auto;
+  }
+
+  .sidebar-brand {
+    margin-bottom: 0;
+  }
+
+  .sidebar-menu {
+    flex-direction: row;
+    flex: 0 0 auto;
+  }
+
+  .menu-item {
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+
+  .menu-item.active {
+    border-left: none;
+    border-bottom: 2px solid var(--color-red);
+  }
+
+  .logout-btn {
+    display: none;
+  }
+
+  .main-content {
+    padding: 24px 20px 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-item,
+  .logout-btn {
+    transition: none;
+  }
+}

@@ -1,0 +1,340 @@
+@import "../../assets/styles/theme.css";
+
+.loginPage {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(280px, 38%) 1fr;
+  width: 100vw;
+  height: 100vh;
+  background: var(--color-bg);
+  font-family: var(--font-body);
+  color: var(--color-text);
+  overflow: hidden;
+}
+
+/* ---------- Left brand panel ---------- */
+
+.loginPage-brand {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 48px 40px;
+  background: linear-gradient(
+    165deg,
+    var(--color-black) 0%,
+    var(--color-black-soft) 100%
+  );
+  color: #ffffff;
+  overflow-y: auto;
+}
+
+.loginPage-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.loginPage-logoMark {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--color-red);
+  transform: rotate(45deg);
+}
+
+.loginPage-logoText {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.loginPage-tagline {
+  max-width: 30ch;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.loginPage-flow {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.loginPage-flowStep {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 34px;
+}
+
+.loginPage-flowStep:last-child {
+  padding-bottom: 0;
+}
+
+.loginPage-flowDot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-red);
+  border: 1px solid var(--color-red);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  z-index: 1;
+}
+
+.loginPage-flowLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.loginPage-flowLine {
+  position: absolute;
+  left: 13px;
+  top: 28px;
+  width: 1px;
+  height: 34px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.loginPage-brandFooter {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* ---------- Right form panel ---------- */
+
+.loginPage-formPanel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  overflow-y: auto;
+  background: var(--color-surface);
+}
+
+.loginPage-formCard {
+  width: 100%;
+  max-width: 380px;
+}
+
+.loginPage-formHeader {
+  margin-bottom: 28px;
+}
+
+.loginPage-title {
+  margin: 0 0 6px;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--color-black);
+}
+
+.loginPage-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.loginPage-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.loginPage-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.loginPage-labelRow {
+  display: flex;
+  align-items: center;
+  justify-content: left;
+}
+
+.loginPage-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  display: flex;
+  justify-content: space-between;
+}
+
+.loginPage-forgotLink {
+  font-size: 12px;
+  color: var(--color-red);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.loginPage-forgotLink:hover {
+  text-decoration: underline;
+}
+
+.loginPage-input {
+  width: 100%;
+  padding: 11px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.loginPage-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.loginPage-input:focus-visible {
+  outline: none;
+  border-color: var(--color-red);
+  box-shadow: 0 0 0 3px var(--color-red-soft);
+}
+
+.loginPage-passwordWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  
+}
+
+.loginPage-passwordWrap .loginPage-input {
+  padding-right: 56px;
+}
+
+.loginPage-togglePassword {
+  position: absolute;
+  right: 10px;
+  padding: 4px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-red);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.loginPage-togglePassword:focus-visible {
+  outline: 2px solid var(--color-red);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.loginPage-error {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--color-red-dark);
+  background: var(--color-red-soft);
+  border: 1px solid var(--color-red-soft-strong);
+  border-radius: var(--radius-sm);
+}
+
+.loginPage-remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  /* user-select: none; */
+}
+
+.loginPage-remember input {
+  accent-color: var(--color-red);
+  width: 15px;
+  height: 15px;
+}
+
+.loginPage-submit {
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  color: #ffffff;
+  background: var(--color-red);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.05s ease;
+}
+
+.loginPage-submit:hover:not(:disabled) {
+  background: var(--color-red-dark);
+}
+
+.loginPage-submit:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.loginPage-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.loginPage-submit:focus-visible {
+  outline: 2px solid var(--color-black);
+  outline-offset: 2px;
+}
+
+.loginPage-helpText {
+  margin: 24px 0 0;
+  font-size: 13px;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.loginPage-helpText a {
+  color: var(--color-red);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.loginPage-helpText a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 860px) {
+  .loginPage {
+    grid-template-columns: 1fr;
+  }
+
+  .loginPage-brand {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    flex: 0 0 auto;
+  }
+
+  .loginPage-tagline,
+  .loginPage-flow,
+  .loginPage-brandFooter {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loginPage-input,
+  .loginPage-submit {
+    transition: none;
+  }
+}

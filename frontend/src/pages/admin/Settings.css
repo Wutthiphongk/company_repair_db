@@ -1,0 +1,518 @@
+@import "../../assets/styles/theme.css";
+
+/* =========================================================
+   1. MAIN CONTAINER & HEADER (MINIMAL RED/BLACK/WHITE)
+========================================================= */
+.settings {
+  max-width: 1050px;
+  margin: 0 auto;
+  padding: 36px 24px;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    sans-serif;
+  color: #18181b;
+  background-color: transparent;
+}
+
+.settings-headerRow {
+  margin-bottom: 28px;
+}
+
+.settings-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fee2e2;
+  border-radius: 999px;
+  margin-bottom: 8px;
+}
+
+.settings-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #09090b;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.025em;
+}
+
+.settings-subtitle {
+  font-size: 14px;
+  color: #71717a;
+  margin: 0;
+}
+
+/* =========================================================
+   2. MAIN LAYOUT (SIDEBAR + UNIFIED EQUAL CARD)
+========================================================= */
+.settings-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 28px;
+  align-items: stretch; /* ให้ sidebar กับ content สูงสัมพันธ์กัน */
+}
+
+/* Sidebar Menu */
+.settings-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #ffffff;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid #e4e4e7;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  height: fit-content;
+}
+
+.settings-tabBtn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #52525b;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease-in-out;
+}
+
+.settings-tabBtn:hover {
+  background: #fafafa;
+  color: #18181b;
+}
+
+/* Active Tab: โทนแดงคุมโทน */
+.settings-tabBtn--active {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+  font-weight: 600;
+}
+
+.settings-tabIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+
+.settings-tabBtn--active .settings-tabIcon svg {
+  stroke: #dc2626;
+}
+
+/* =========================================================
+   3. SETTINGS CARD (EQUAL HEIGHT 520px)
+========================================================= */
+.settings-panel {
+  min-width: 0;
+}
+
+.settings-card {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 14px;
+  padding: 30px 34px;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.03),
+    0 6px 16px rgba(0, 0, 0, 0.015);
+
+  /* บังคับขนาดทั้ง 3 กล่องให้ใหญ่และสูงเท่ากัน */
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-cardHead {
+  margin-bottom: 22px;
+}
+
+.settings-cardTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: #09090b;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.015em;
+}
+
+.settings-cardSubtitle {
+  font-size: 13.5px;
+  color: #71717a;
+  margin: 0;
+}
+
+/* Minimal Avatar */
+.settings-avatarSection {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #f4f4f5;
+}
+
+.settings-avatarCircle {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #18181b;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 600;
+  border: 2px solid #fee2e2;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15);
+}
+
+.settings-avatarInfo h4 {
+  margin: 0 0 3px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #18181b;
+}
+
+.settings-avatarInfo p {
+  margin: 0;
+  font-size: 13px;
+  color: #71717a;
+}
+
+/* =========================================================
+   4. FORM FIELDS & INPUTS (MINIMAL RED ACCENT)
+========================================================= */
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* ขยายเต็มการ์ด */
+  justify-content: space-between; /* ดัน Footer ลงล่างสุด ให้ทั้ง 3 กล่องเท่ากัน */
+}
+
+.settings-formBody {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-fieldRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-label {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #27272a;
+}
+
+.settings-label .req {
+  color: #dc2626;
+  margin-left: 2px;
+}
+
+.settings-input {
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid #d4d4d8;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #09090b;
+  background-color: #ffffff;
+  outline: none;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+.settings-input:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.settings-input::placeholder {
+  color: #a1a1aa;
+}
+
+/* Password Group & Eye Button */
+.settings-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.settings-input-group .settings-input {
+  width: 100%;
+  padding-right: 44px;
+}
+
+.settings-eye-btn {
+  position: absolute;
+  right: 8px;
+  background: transparent;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #71717a;
+  border-radius: 6px;
+  transition: color 0.15s;
+}
+
+.settings-eye-btn:hover {
+  color: #18181b;
+}
+
+/* =========================================================
+   5. NOTIFICATION SWITCHES (RED ACTIVE)
+========================================================= */
+.settings-toggleList {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid #f4f4f5;
+  gap: 16px;
+}
+
+.settings-toggleRow:last-child {
+  border-bottom: none;
+}
+
+.settings-toggleText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-toggleLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: #18181b;
+}
+
+.settings-toggleHint {
+  font-size: 12.5px;
+  color: #71717a;
+}
+
+/* iOS-Style Toggle Switch */
+.settings-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background-color: #e4e4e7;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.settings-switch--on {
+  background-color: #dc2626; /* แดง */
+}
+
+.settings-switchKnob {
+  display: block;
+  width: 20px;
+  height: 20px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settings-switch--on .settings-switchKnob {
+  transform: translateX(20px);
+}
+
+/* =========================================================
+   6. BUTTONS & ACTIONS (RED PRIMARY & MINIMAL GHOST)
+========================================================= */
+.settings-formFooter {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding-top: 24px;
+  margin-top: 24px;
+  border-top: 1px solid #f4f4f5;
+}
+
+.settings-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 20px;
+  background-color: #dc2626; /* แดง */
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.25);
+}
+
+.settings-submit:hover:not(:disabled) {
+  background-color: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.settings-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.settings-btn-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 16px;
+  background-color: transparent;
+  color: #71717a;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.settings-btn-cancel:hover:not(:disabled) {
+  background-color: #fafafa;
+  color: #18181b;
+  border-color: #d4d4d8;
+}
+
+/* =========================================================
+   7. FEEDBACK BANNER & SPINNER
+========================================================= */
+.settings-feedback {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 13.5px;
+  font-weight: 500;
+  animation: slideDown 0.2s ease-out;
+}
+
+.settings-feedbackIcon {
+  display: flex;
+  align-items: center;
+}
+
+.settings-feedback--success {
+  background-color: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.settings-feedback--error {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.settings-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 14px;
+  color: #71717a;
+}
+
+.spinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid #f4f4f5;
+  border-top-color: #dc2626;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================================
+   8. RESPONSIVE DESIGN
+========================================================= */
+@media (max-width: 840px) {
+  .settings-layout {
+    grid-template-columns: 1fr;
+  }
+  .settings-tabs {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  .settings-tabBtn {
+    white-space: nowrap;
+  }
+  .settings-card {
+    min-height: auto; /* บนจอมือถือให้ยืดหยุ่นตามเนื้อหา */
+  }
+}
+
+@media (max-width: 580px) {
+  .settings {
+    padding: 20px 14px;
+  }
+  .settings-card {
+    padding: 20px 16px;
+  }
+  .settings-fieldRow {
+    grid-template-columns: 1fr;
+  }
+  .settings-formFooter {
+    flex-direction: column-reverse;
+  }
+  .settings-submit,
+  .settings-btn-cancel {
+    width: 100%;
+  }
+}

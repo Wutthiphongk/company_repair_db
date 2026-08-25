@@ -1,0 +1,326 @@
+@import "../../assets/styles/theme.css";
+
+.createTicket {
+  min-height: 100vh;
+  background: var(--color-bg);
+  font-family: var(--font-body);
+  color: var(--color-text);
+}
+
+/* ---------- Top bar ---------- */
+
+.createTicket-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 28px;
+  background: var(--color-black);
+  color: #ffffff;
+}
+
+.createTicket-backBtn {
+  padding: 8px 4px;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.75);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.createTicket-backBtn:hover {
+  color: #ffffff;
+}
+
+.createTicket-topbarLogo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.createTicket-logoMark {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--color-red);
+  transform: rotate(45deg);
+}
+
+/* ---------- Content ---------- */
+
+.createTicket-content {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px 60px;
+}
+
+.createTicket-card {
+  width: 100%;
+  max-width: 640px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+}
+
+.createTicket-header {
+  margin-bottom: 22px;
+}
+
+.createTicket-title {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-black);
+}
+
+.createTicket-subtitle {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+/* ---------- Feedback banner ---------- */
+
+.createTicket-feedback {
+  margin: 0 0 20px;
+  padding: 11px 14px;
+  font-size: 13.5px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+}
+
+.createTicket-feedback--success {
+  color: var(--color-black);
+  background: var(--color-bg);
+  border-color: var(--color-border);
+}
+
+.createTicket-feedback--error {
+  color: var(--color-red-dark);
+  background: var(--color-red-soft);
+  border-color: var(--color-red-soft-strong);
+}
+
+/* ---------- Form ---------- */
+
+.createTicket-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.createTicket-fieldRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.createTicket-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.createTicket-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.createTicket-required {
+  color: var(--color-red);
+}
+
+.createTicket-input {
+  width: 100%;
+  padding: 11px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.createTicket-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.createTicket-input:focus-visible {
+  outline: none;
+  border-color: var(--color-red);
+  box-shadow: 0 0 0 3px var(--color-red-soft);
+}
+
+.createTicket-input[aria-invalid="true"] {
+  border-color: var(--color-red);
+}
+
+.createTicket-select {
+  cursor: pointer;
+}
+
+.createTicket-textarea {
+  resize: vertical;
+  min-height: 96px;
+  line-height: 1.5;
+}
+
+.createTicket-fieldError {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-red-dark);
+}
+
+/* ---------- Image preview ---------- */
+
+.createTicket-imagePreview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 8px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.createTicket-imagePreview img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.createTicket-removeImageBtn {
+  padding: 6px 10px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-red-dark);
+  background: var(--color-red-soft);
+  border: 1px solid var(--color-red-soft-strong);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.createTicket-removeImageBtn:hover {
+  background: var(--color-red-soft-strong);
+}
+
+/* ---------- Priority segmented control ---------- */
+
+.createTicket-priorityGroup {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.createTicket-priorityBtn {
+  padding: 10px 6px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.createTicket-priorityBtn:hover {
+  border-color: var(--color-black);
+  color: var(--color-black);
+}
+
+.createTicket-priorityBtn--active {
+  color: #ffffff;
+  background: var(--color-black);
+  border-color: var(--color-black);
+}
+
+.createTicket-priorityBtn--urgent.createTicket-priorityBtn--active {
+  background: var(--color-red);
+  border-color: var(--color-red);
+}
+
+.createTicket-priorityBtn:focus-visible {
+  outline: 2px solid var(--color-red);
+  outline-offset: 2px;
+}
+
+/* ---------- Submit ---------- */
+
+.createTicket-submit {
+  margin-top: 4px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  color: #ffffff;
+  background: var(--color-red);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.05s ease;
+}
+
+.createTicket-submit:hover:not(:disabled) {
+  background: var(--color-red-dark);
+}
+
+.createTicket-submit:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.createTicket-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.createTicket-submit:focus-visible {
+  outline: 2px solid var(--color-black);
+  outline-offset: 2px;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 560px) {
+  .createTicket-card {
+    padding: 24px 18px;
+  }
+
+  .createTicket-fieldRow {
+    grid-template-columns: 1fr;
+  }
+
+  .createTicket-priorityGroup {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .createTicket-input,
+  .createTicket-priorityBtn,
+  .createTicket-submit,
+  .createTicket-backBtn {
+    transition: none;
+  }
+}
