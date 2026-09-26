@@ -10,14 +10,39 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
-// 2. อัปเดตสิทธิ์ผู้ใช้งาน (user, tech, admin)
+// 2. อัปเดตสิทธิ์ผู้ใช้งาน (USER, TECHNICIAN, ADMIN)
 export const updateUserRole = async (req, res) => {
   const { id } = req.params;
   const { role } = req.body; // รับค่า role ใหม่
 
+  // อนุญาตเฉพาะค่าที่อยู่ใน ENUM ของตาราง users เท่านั้น
+  const allowedRoles = ["USER", "TECHNICIAN", "ADMIN"];
+  const nextRole = String(role || "").toUpperCase();
+
+  if (!allowedRoles.includes(nextRole)) {
+    return res.status(400).json({
+      message: `สิทธิ์ไม่ถูกต้อง (ต้องเป็น ${allowedRoles.join(", ")})`,
+    });
+  }
+
+  // ห้ามเปลี่ยนสิทธิ์ตัวเอง กัน admin คนสุดท้ายล็อคเอาต์ระบบ
+  if (Number(id) === Number(req.user?.id)) {
+    return res
+      .status(400)
+      .json({ message: "ไม่สามารถเปลี่ยนสิทธิ์ของบัญชีตัวเองได้" });
+  }
+
   try {
-    await db.query('UPDATE users SET role = ? WHERE id = ?', [role, id]);
-    res.json({ message: 'อัปเดตสิทธิ์ผู้ใช้งานเรียบร้อยแล้ว' });
+    const [result] = await db.query(
+      'UPDATE users SET role = ? WHERE id = ?',
+      [nextRole, id],
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "ไม่พบบัญชีผู้ใช้นี้ในระบบ" });
+    }
+
+    res.json({ message: "อัปเดตสิทธิ์ผู้ใช้งานเรียบร้อยแล้ว" });
   } catch (error) {
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการอัปเดตสิทธิ์', error: error.message });
   }

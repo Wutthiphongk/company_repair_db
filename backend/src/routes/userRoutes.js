@@ -7,7 +7,7 @@ import {
   updatePassword,
   updateNotifications,
 } from "../controllers/userController.js";
-import { verifyToken } from "../middlewares/authMiddleware.js";
+import { verifyToken, isAdmin } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
@@ -17,11 +17,23 @@ router.put("/me", verifyToken, updateProfile);
 router.put("/password", verifyToken, updatePassword);
 router.put("/notifications", verifyToken, updateNotifications);
 
-// 1. ดึงข้อมูลผู้ใช้ทั้งหมด
-router.get("/", async (req, res) => {
+// 🟢 1. ดึงข้อมูลผู้ใช้ทั้งหมด (ต้อง Login ก่อน — ใช้โดยหน้า UserManagement
+//      และหน้าแจ้งซ่อมที่ดึงรายชื่อพนักงาน/ช่าง)
+router.get("/", verifyToken, async (req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT id, name, email, phone, role, department_id, created_at FROM users ORDER BY id DESC",
+      `SELECT 
+        u.id, 
+        u.name, 
+        u.email, 
+        u.phone, 
+        u.role, 
+        u.department_id, 
+        d.name AS department_name, 
+        u.created_at 
+       FROM users u
+       LEFT JOIN departments d ON u.department_id = d.id
+       ORDER BY u.id DESC`,
     );
     res.json(rows);
   } catch (err) {
@@ -30,17 +42,31 @@ router.get("/", async (req, res) => {
   }
 });
 
-// 2. เพิ่มผู้ใช้งานใหม่
-router.post("/", async (req, res) => {
+// 🟢 2. เพิ่ม Endpoint ดึงรายชื่อช่าง (แก้ Error 404: /api/technicians)
+router.get("/technicians", verifyToken, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT id, name, email, phone FROM users WHERE role = 'TECHNICIAN' ORDER BY name ASC",
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error("Get Technicians Error:", err);
+    res.status(500).json({ message: "ไม่สามารถดึงข้อมูลช่างได้" });
+  }
+});
+
+// 🟢 3. เพิ่มผู้ใช้งานใหม่ (เฉพาะ Admin เท่านั้น — กันสร้างบัญชี Admin ฟรีๆ)
+router.post("/", verifyToken, isAdmin, async (req, res) => {
   const { name, email, phone, password, departments, department_id, role } =
     req.body;
-  const targetDept = department_id || departments || null;
+
+  let targetDeptInput = department_id || departments || null;
 
   if (!email || !password) {
     return res.status(400).json({ message: "กรุณากรอกอีเมลและรหัสผ่าน" });
   }
 
-  // แปลงค่า Role จาก Frontend ให้ตรงกับ ENUM ใน Database ('USER', 'TECHNICIAN', 'ADMIN')
+  // แปลงค่า Role จาก Frontend ให้ตรงกับ ENUM ใน Database
   let dbRole = "USER";
   if (role) {
     const upperRole = role.toUpperCase();
@@ -52,6 +78,26 @@ router.post("/", async (req, res) => {
   }
 
   try {
+    // ตรวจสอบและแปลง Department เป็น ID ตัวเลขที่ถูกต้อง
+    let finalDeptId = null;
+
+    if (targetDeptInput) {
+      if (!isNaN(targetDeptInput)) {
+        finalDeptId = Number(targetDeptInput);
+      } else {
+        const [deptRows] = await pool.query(
+          "SELECT id FROM departments WHERE name = ?",
+          [targetDeptInput],
+        );
+
+        if (deptRows.length > 0) {
+          finalDeptId = deptRows[0].id;
+        } else {
+          finalDeptId = null;
+        }
+      }
+    }
+
     // เช็กอีเมลซ้ำ
     const [existing] = await pool.query(
       "SELECT id FROM users WHERE email = ?",
@@ -67,7 +113,7 @@ router.post("/", async (req, res) => {
     // บันทึกลง Database
     const [result] = await pool.query(
       "INSERT INTO users (name, email, phone, password, department_id, role) VALUES (?, ?, ?, ?, ?, ?)",
-      [name || "", email, phone || "", hashedPassword, targetDept, dbRole],
+      [name || "", email, phone || "", hashedPassword, finalDeptId, dbRole],
     );
 
     res.status(201).json({
@@ -77,7 +123,7 @@ router.post("/", async (req, res) => {
         name,
         email,
         phone,
-        department_id: targetDept,
+        department_id: finalDeptId,
         role: dbRole,
       },
     });
@@ -86,6 +132,38 @@ router.post("/", async (req, res) => {
     res
       .status(500)
       .json({ message: "ไม่สามารถเพิ่มผู้ใช้งานได้", error: err.message });
+  }
+});
+
+// 🟢 4. ลบผู้ใช้งาน (เฉพาะ Admin เท่านั้น)
+//      - ห้ามลบบัญชีตัวเอง
+//      - tickets.user_id เป็น ON DELETE CASCADE → รายการแจ้งซ่อมของผู้ใช้นี้จะถูกลบตาม
+router.delete("/:id", verifyToken, isAdmin, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    if (Number(id) === Number(req.user?.id)) {
+      return res
+        .status(400)
+        .json({ message: "ไม่สามารถลบบัญชีของตัวเองได้" });
+    }
+
+    const [existing] = await pool.query(
+      "SELECT id, name, email FROM users WHERE id = ?",
+      [id],
+    );
+    if (existing.length === 0) {
+      return res.status(404).json({ message: "ไม่พบบัญชีผู้ใช้นี้ในระบบ" });
+    }
+
+    await pool.query("DELETE FROM users WHERE id = ?", [id]);
+
+    res.json({ message: `ลบบัญชี "${existing[0].name || existing[0].email}" เรียบร้อยแล้ว` });
+  } catch (err) {
+    console.error("Delete User Error:", err);
+    res
+      .status(500)
+      .json({ message: "ไม่สามารถลบผู้ใช้ได้", error: err.message });
   }
 });
 

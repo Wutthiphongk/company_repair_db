@@ -7,49 +7,6 @@
   color: var(--color-text);
 }
 
-/* ---------- Top bar ---------- */
-
-.createTicket-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 28px;
-  background: var(--color-black);
-  color: #ffffff;
-}
-
-.createTicket-backBtn {
-  padding: 8px 4px;
-  font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.75);
-  background: none;
-  border: none;
-  cursor: pointer;
-  transition: color 0.15s ease;
-}
-
-.createTicket-backBtn:hover {
-  color: #ffffff;
-}
-
-.createTicket-topbarLogo {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.createTicket-logoMark {
-  width: 10px;
-  height: 10px;
-  border-radius: 2px;
-  background: var(--color-red);
-  transform: rotate(45deg);
-}
-
 /* ---------- Content ---------- */
 
 .createTicket-content {
@@ -300,6 +257,37 @@
   outline-offset: 2px;
 }
 
+
+/* --- Cancel --- */
+
+.createTicket-cancel {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 0%; /* ปรับระยะห่างจากปุ่มบนตามต้องการ */
+  font-size: 14px;
+}
+
+.createTicket-cancel button {
+  padding: 0;
+  font-family: inherit;
+  color: #6b7280;
+  background: none;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.createTicket-cancel button:hover {
+  text-decoration: underline;
+  color: #374151;
+}
+
+/* ช่องพิมพ์สถานที่เอง (โผล่มาเมื่อเลือก "สถานที่อื่น ๆ (พิมพ์เอง)") */
+.createTicket-locationCustom {
+  margin-top: 8px;
+}
+
 /* ---------- Responsive ---------- */
 
 @media (max-width: 560px) {
@@ -319,8 +307,7 @@
 @media (prefers-reduced-motion: reduce) {
   .createTicket-input,
   .createTicket-priorityBtn,
-  .createTicket-submit,
-  .createTicket-backBtn {
+  .createTicket-submit {
     transition: none;
   }
 }

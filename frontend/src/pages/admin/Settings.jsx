@@ -34,6 +34,22 @@ const Icons = {
       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
     </svg>
   ),
+  Database: () => (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <ellipse cx="12" cy="5" rx="9" ry="3" />
+      <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+      <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+    </svg>
+  ),
   Bell: () => (
     <svg
       width="18"
@@ -107,8 +123,38 @@ const Icons = {
       strokeLinejoin="round"
     >
       <circle cx="12" cy="12" r="10" />
-      <line x1="12" x2="12" y1="8" y2="12" />
-      <line x1="12" x2="12.01" y1="16" y2="16" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </svg>
+  ),
+  Trash: () => (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    </svg>
+  ),
+  Plus: () => (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   ),
 };
@@ -117,6 +163,29 @@ const TABS = [
   { id: "profile", label: "ข้อมูลส่วนตัว", icon: <Icons.User /> },
   { id: "security", label: "ความปลอดภัย", icon: <Icons.Shield /> },
   { id: "notifications", label: "การแจ้งเตือน", icon: <Icons.Bell /> },
+];
+
+const DEFAULT_CATEGORIES = [
+  { id: 1, name: "ฮาร์ดแวร์ / อุปกรณ์ชำรุด" },
+  { id: 2, name: "ซอฟต์แวร์ / ไวรัส / Windows" },
+  { id: 3, name: "ระบบเครือข่าย & อินเทอร์เน็ต" },
+  { id: 4, name: "เครื่องพิมพ์ / สแกนเนอร์" },
+  { id: 5, name: "อื่นๆ" },
+];
+
+const DEFAULT_DEPARTMENTS = [
+  { id: 1, name: "ฝ่ายไอที (IT Support)" },
+  { id: 2, name: "ฝ่ายบุคคล (HR)" },
+  { id: 3, name: "บัญชีและการเงิน" },
+  { id: 4, name: "การตลาด" },
+  { id: 5, name: "อาคารและสถานที่" },
+];
+
+const DEFAULT_LOCATIONS = [
+  { id: 1, name: "อาคาร A ชั้น 1" },
+  { id: 2, name: "อาคาร A ชั้น 2" },
+  { id: 3, name: "อาคาร B ห้องประชุมใหญ่" },
+  { id: 4, name: "สำนักงานใหญ่" },
 ];
 
 export default function Settings() {
@@ -159,7 +228,7 @@ export default function Settings() {
     }, 4000);
   }, []);
 
-  // ดึงข้อมูลตอนเปิดหน้า
+  // 1. ดึงข้อมูล Profile ผู้ใช้งาน
   useEffect(() => {
     let isMounted = true;
     const fetchUserProfile = async () => {
@@ -172,7 +241,11 @@ export default function Settings() {
           const loadedProfile = {
             fullName: userData.fullName || userData.name || "",
             email: userData.email || "",
-            departments: userData.department_name || userData.departments || userData.department_id || "",
+            departments:
+              userData.department_name ||
+              userData.departments ||
+              userData.department_id ||
+              "",
             phone: userData.phone || userData.tel || "",
           };
 
@@ -195,7 +268,6 @@ export default function Settings() {
         }
       } catch (err) {
         console.error("ดึงข้อมูลผู้ใช้ไม่สำเร็จ:", err);
-        if (isMounted) showFeedbackMsg("error", "ไม่สามารถดึงข้อมูลผู้ใช้ได้");
       } finally {
         if (isMounted) setIsInitialLoading(false);
       }
@@ -205,7 +277,28 @@ export default function Settings() {
     return () => {
       isMounted = false;
     };
-  }, [showFeedbackMsg]);
+  }, []);
+
+  // 2. ดึงข้อมูล Master Data จาก LocalStorage (ไม่มี Error 404)
+  const fetchMasterData = useCallback(() => {
+    try {
+      const savedCats = localStorage.getItem("master_categories");
+      const savedDepts = localStorage.getItem("master_departments");
+      const savedLocs = localStorage.getItem("master_locations");
+
+      setCategories(savedCats ? JSON.parse(savedCats) : DEFAULT_CATEGORIES);
+      setDepartments(savedDepts ? JSON.parse(savedDepts) : DEFAULT_DEPARTMENTS);
+      setLocations(savedLocs ? JSON.parse(savedLocs) : DEFAULT_LOCATIONS);
+    } catch (err) {
+      console.error("Failed to load master data:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "masterData") {
+      fetchMasterData();
+    }
+  }, [activeTab, fetchMasterData]);
 
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
@@ -343,7 +436,7 @@ export default function Settings() {
           ))}
         </nav>
 
-        {/* Content Box (Unified Equal Height) */}
+        {/* Content Box */}
         <div className="settings-panel">
           {feedback.message && (
             <div
@@ -371,7 +464,6 @@ export default function Settings() {
                 </p>
               </div>
 
-              {/* Minimal Avatar */}
               <div className="settings-avatarSection">
                 <div className="settings-avatarCircle">{userInitial}</div>
                 <div className="settings-avatarInfo">
@@ -451,7 +543,10 @@ export default function Settings() {
                         placeholder="เช่น ฝ่ายไอที, ฝ่ายการเงิน"
                         value={profile.departments}
                         onChange={(e) =>
-                          setProfile({ ...profile, departments: e.target.value })
+                          setProfile({
+                            ...profile,
+                            departments: e.target.value,
+                          })
                         }
                       />
                     </div>
@@ -479,7 +574,219 @@ export default function Settings() {
             </div>
           )}
 
-          {/* TAB 2: Security */}
+          {/* TAB 2: Master Data Management */}
+          {activeTab === "masterData" && (
+            <div className="settings-card">
+              <div className="settings-cardHead">
+                <h2
+                  className="settings-cardTitle"
+                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                >
+                  <SettingsIcon className="w-5 h-5 text-blue-600" />{" "}
+                  ระบบจัดการตั้งค่าพื้นฐาน
+                </h2>
+                <p className="settings-cardSubtitle">
+                  กำหนดหมวดหมู่ปัญหา แผนก และสถานที่สำหรับระบบแจ้งซ่อม
+                </p>
+              </div>
+
+              <div className="settings-masterGrid">
+                {/* 1. หมวดหมู่ */}
+                <div className="settings-masterBox">
+                  <h3
+                    className="settings-masterBoxTitle"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <Folder className="w-5 h-5 text-amber-500" />{" "}
+                    หมวดหมู่งานซ่อม
+                  </h3>
+                  <div className="settings-masterInputRow">
+                    <input
+                      type="text"
+                      className="settings-input"
+                      placeholder="เพิ่มหมวดหมู่ใหม่..."
+                      value={newCategory}
+                      onChange={(e) => setNewCategory(e.target.value)}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && handleAddCategory()
+                      }
+                    />
+                    <button
+                      type="button"
+                      className="settings-btnAddMaster"
+                      onClick={handleAddCategory}
+                    >
+                      <Plus className="w-4 h-4" /> เพิ่ม
+                    </button>
+                  </div>
+                  <ul className="settings-masterList">
+                    {categories.map((cat) => (
+                      <li key={cat.id} className="settings-masterItem">
+                        <span
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          <Tag className="w-4 h-4 text-gray-400" />
+                          {cat.name}
+                        </span>
+                        <button
+                          type="button"
+                          className="settings-btnDeleteMaster"
+                          onClick={() => handleDeleteCategory(cat.id)}
+                          title="ลบ"
+                        >
+                          <Trash className="w-4 h-4 text-red-500" />
+                        </button>
+                      </li>
+                    ))}
+                    {categories.length === 0 && (
+                      <li className="settings-masterEmpty">
+                        <Inbox className="w-6 h-6 text-gray-300 mb-1" />
+                        <span>ยังไม่มีข้อมูลหมวดหมู่</span>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+
+                {/* 2. แผนก */}
+                <div className="settings-masterBox">
+                  <h3
+                    className="settings-masterBoxTitle"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <Building className="w-5 h-5 text-indigo-500" /> รายชื่อแผนก
+                    / ฝ่าย
+                  </h3>
+                  <div className="settings-masterInputRow">
+                    <input
+                      type="text"
+                      className="settings-input"
+                      placeholder="เพิ่มแผนกใหม่..."
+                      value={newDepartment}
+                      onChange={(e) => setNewDepartment(e.target.value)}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && handleAddDepartment()
+                      }
+                    />
+                    <button
+                      type="button"
+                      className="settings-btnAddMaster"
+                      onClick={handleAddDepartment}
+                    >
+                      <Plus className="w-4 h-4" /> เพิ่ม
+                    </button>
+                  </div>
+                  <ul className="settings-masterList">
+                    {departments.map((dept) => (
+                      <li key={dept.id} className="settings-masterItem">
+                        <span
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          <Users className="w-4 h-4 text-gray-400" />
+                          {dept.name}
+                        </span>
+                        <button
+                          type="button"
+                          className="settings-btnDeleteMaster"
+                          onClick={() => handleDeleteDepartment(dept.id)}
+                          title="ลบ"
+                        >
+                          <Trash className="w-4 h-4 text-red-500" />
+                        </button>
+                      </li>
+                    ))}
+                    {departments.length === 0 && (
+                      <li className="settings-masterEmpty">
+                        <Inbox className="w-6 h-6 text-gray-300 mb-1" />
+                        <span>ยังไม่มีข้อมูลแผนก</span>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+
+                {/* 3. สถานที่ */}
+                <div className="settings-masterBox">
+                  <h3
+                    className="settings-masterBoxTitle"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <MapPin className="w-5 h-5 text-rose-500" /> สถานที่ / ตึก /
+                    ชั้น
+                  </h3>
+                  <div className="settings-masterInputRow">
+                    <input
+                      type="text"
+                      className="settings-input"
+                      placeholder="เพิ่มสถานที่ใหม่..."
+                      value={newLocation}
+                      onChange={(e) => setNewLocation(e.target.value)}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && handleAddLocation()
+                      }
+                    />
+                    <button
+                      type="button"
+                      className="settings-btnAddMaster"
+                      onClick={handleAddLocation}
+                    >
+                      <Plus className="w-4 h-4" /> เพิ่ม
+                    </button>
+                  </div>
+                  <ul className="settings-masterList">
+                    {locations.map((loc) => (
+                      <li key={loc.id} className="settings-masterItem">
+                        <span
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          <Navigation className="w-4 h-4 text-gray-400" />
+                          {loc.name}
+                        </span>
+                        <button
+                          type="button"
+                          className="settings-btnDeleteMaster"
+                          onClick={() => handleDeleteLocation(loc.id)}
+                          title="ลบ"
+                        >
+                          <Trash className="w-4 h-4 text-red-500" />
+                        </button>
+                      </li>
+                    ))}
+                    {locations.length === 0 && (
+                      <li className="settings-masterEmpty">
+                        <Inbox className="w-6 h-6 text-gray-300 mb-1" />
+                        <span>ยังไม่มีข้อมูลสถานที่</span>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: Security */}
           {activeTab === "security" && (
             <div className="settings-card">
               <div className="settings-cardHead">
@@ -633,7 +940,7 @@ export default function Settings() {
             </div>
           )}
 
-          {/* TAB 3: Notifications */}
+          {/* TAB 4: Notifications */}
           {activeTab === "notifications" && (
             <div className="settings-card">
               <div className="settings-cardHead">

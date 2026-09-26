@@ -1,0 +1,471 @@
+@import "../../assets/styles/theme.css";
+
+/* =========================================================
+   1. MAIN CONTAINER & HEADER
+========================================================= */
+.md-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  font-family: var(
+    --font-body,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif
+  );
+  color: var(--color-text, #141414);
+  box-sizing: border-box;
+}
+
+.md-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 18px;
+}
+
+.md-headerInfo {
+  flex: 1;
+}
+
+.md-title {
+  margin: 0 0 6px;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-black, #0b0b0c);
+  letter-spacing: -0.02em;
+}
+
+.md-subtitle {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--color-text-secondary, #6b6b6b);
+}
+
+.md-topActions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.md-accountGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.md-divider {
+  width: 100%;
+  height: 1px;
+  background-color: var(--color-border, #e5e5e5);
+  margin-bottom: 24px;
+}
+
+/* =========================================================
+   2. FEEDBACK & ERROR BANNER
+========================================================= */
+.md-feedback {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  font-size: 13.5px;
+  border-radius: var(--radius-sm, 6px);
+}
+
+.md-feedback--success {
+  color: #15803d;
+  background: rgba(22, 163, 74, 0.08);
+  border: 1px solid rgba(22, 163, 74, 0.16);
+}
+
+.md-feedback--error {
+  color: var(--color-red-dark, #8f1029);
+  background: var(--color-red-soft, rgba(200, 30, 58, 0.08));
+  border: 1px solid var(--color-red-soft-strong, rgba(200, 30, 58, 0.14));
+}
+
+.md-feedbackClose {
+  padding: 0 6px;
+  font-size: 16px;
+  line-height: 1;
+  color: inherit;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.md-feedbackClose:hover {
+  opacity: 1;
+}
+
+.md-errorBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  font-size: 13.5px;
+  color: var(--color-red-dark, #8f1029);
+  background: var(--color-red-soft, rgba(200, 30, 58, 0.08));
+  border: 1px solid var(--color-red-soft-strong, rgba(200, 30, 58, 0.14));
+  border-radius: var(--radius-sm, 6px);
+}
+
+.md-errorBanner button {
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #ffffff;
+  background: var(--color-red, #c81e3a);
+  border: none;
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.md-errorBanner button:hover {
+  background: var(--color-red-dark, #8f1029);
+}
+
+/* =========================================================
+   3. CREATE FORM
+========================================================= */
+.md-createCard {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 18px;
+  margin-bottom: 22px;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e5e5e5);
+  border-radius: var(--radius-md, 10px);
+}
+
+.md-createField {
+  flex: 1;
+  min-width: 0;
+}
+
+.md-createLabel {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-black, #0b0b0c);
+}
+
+.md-createInput {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--color-text, #141414);
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e5e5e5);
+  border-radius: var(--radius-sm, 6px);
+  outline: none;
+}
+
+.md-createInput::placeholder {
+  color: var(--color-text-muted, #9a9a9a);
+}
+
+.md-createInput:focus {
+  border-color: var(--color-red, #c81e3a);
+  box-shadow: 0 0 0 2px rgba(200, 30, 58, 0.15);
+}
+
+.md-createBtn {
+  height: 40px;
+  padding: 0 20px;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #ffffff;
+  background: var(--color-red, #c81e3a);
+  border: none;
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.md-createBtn:hover:not(:disabled) {
+  background: var(--color-red-dark, #8f1029);
+}
+
+.md-createBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   4. TOOLBAR (SEARCH + COUNT)
+========================================================= */
+.md-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.md-search {
+  width: 280px;
+  max-width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--color-text, #141414);
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e5e5e5);
+  border-radius: var(--radius-sm, 6px);
+  outline: none;
+}
+
+.md-search:focus {
+  border-color: var(--color-red, #c81e3a);
+  box-shadow: 0 0 0 2px rgba(200, 30, 58, 0.15);
+}
+
+.md-count {
+  font-size: 13px;
+  color: var(--color-text-secondary, #6b6b6b);
+}
+
+/* =========================================================
+   5. TABLE
+========================================================= */
+.md-tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e5e5e5);
+  border-radius: var(--radius-md, 10px);
+}
+
+.md-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.md-table thead th {
+  padding: 12px 16px;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: left;
+  color: var(--color-text-secondary, #6b6b6b);
+  background: #fafafa;
+  border-bottom: 1px solid var(--color-border, #e5e5e5);
+  white-space: nowrap;
+}
+
+.md-table tbody td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border, #e5e5e5);
+  vertical-align: middle;
+}
+
+.md-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.md-table tbody tr:hover {
+  background: rgba(0, 0, 0, 0.015);
+}
+
+.md-colId {
+  width: 80px;
+}
+
+.md-colDate {
+  width: 130px;
+  white-space: nowrap;
+}
+
+.md-colAction {
+  width: 170px;
+}
+
+.md-idCell {
+  color: var(--color-text-muted, #9a9a9a);
+  font-variant-numeric: tabular-nums;
+}
+
+.md-nameCell {
+  font-weight: 600;
+  color: var(--color-black, #0b0b0c);
+  word-break: break-word;
+}
+
+/* จำนวนครั้งที่ถูกใช้งาน (เฉพาะแผนก) */
+.md-usage {
+  font-size: 12.5px;
+  color: var(--color-text-secondary, #6b6b6b);
+}
+
+.md-usage--none {
+  color: var(--color-text-muted, #9a9a9a);
+}
+
+/* =========================================================
+   6. ROW ACTIONS & INLINE EDIT
+========================================================= */
+.md-rowActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.md-actionBtn {
+  padding: 6px 12px;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.md-actionBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.md-actionBtn--edit {
+  color: var(--color-text, #141414);
+  background: #ffffff;
+  border-color: var(--color-border, #e5e5e5);
+}
+
+.md-actionBtn--edit:hover:not(:disabled) {
+  background: #f4f4f5;
+}
+
+.md-actionBtn--delete {
+  color: var(--color-red, #c81e3a);
+  background: #ffffff;
+  border-color: rgba(200, 30, 58, 0.3);
+}
+
+.md-actionBtn--delete:hover:not(:disabled) {
+  color: #ffffff;
+  background: var(--color-red, #c81e3a);
+  border-color: var(--color-red, #c81e3a);
+}
+
+.md-actionBtn--save {
+  color: #ffffff;
+  background: var(--color-red, #c81e3a);
+  border-color: var(--color-red, #c81e3a);
+}
+
+.md-actionBtn--save:hover:not(:disabled) {
+  background: var(--color-red-dark, #8f1029);
+}
+
+.md-actionBtn--cancel {
+  color: var(--color-text-secondary, #6b6b6b);
+  background: #ffffff;
+  border-color: var(--color-border, #e5e5e5);
+}
+
+.md-actionBtn--cancel:hover {
+  background: #f4f4f5;
+}
+
+.md-editInput {
+  width: 100%;
+  max-width: 320px;
+  height: 34px;
+  padding: 0 10px;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--color-text, #141414);
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-red, #c81e3a);
+  border-radius: var(--radius-sm, 6px);
+  outline: none;
+}
+
+/* =========================================================
+   7. STATES (LOADING / EMPTY)
+========================================================= */
+.md-stateContainer {
+  padding: 50px 20px;
+  text-align: center;
+  color: var(--color-text-secondary, #6b6b6b);
+  font-size: 14px;
+}
+
+.md-stateContainer p {
+  margin: 0;
+}
+
+.md-stateHint {
+  margin-top: 8px !important;
+  font-size: 13px;
+  color: var(--color-text-muted, #9a9a9a);
+}
+
+.md-spinner {
+  width: 34px;
+  height: 34px;
+  margin: 0 auto 12px;
+  border: 3px solid #f4f4f5;
+  border-top-color: var(--color-red, #c81e3a);
+  border-radius: 50%;
+  animation: md-spin 0.8s linear infinite;
+}
+
+@keyframes md-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================
+   8. RESPONSIVE
+========================================================= */
+@media (max-width: 768px) {
+  .md-topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .md-topActions {
+    justify-content: flex-end;
+  }
+
+  .md-createCard {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .md-createBtn {
+    width: 100%;
+  }
+
+  .md-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .md-search {
+    width: 100%;
+  }
+}

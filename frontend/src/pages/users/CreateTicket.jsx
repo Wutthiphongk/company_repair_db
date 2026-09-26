@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "./CreateTicket.css";
 
 const PRIORITIES = [
@@ -7,21 +7,6 @@ const PRIORITIES = [
   { value: "MEDIUM", label: "ปานกลาง" },
   { value: "HIGH", label: "สูง" },
   { value: "URGENT", label: "ด่วนที่สุด" },
-];
-
-// สมมติรายการแผนก (หรือดึงมาจาก API)
-const DEPARTMENTS = [
-  { id: "1", name: "เทคโนโลยีสารสนเทศ (IT)" },
-  { id: "2", name: "บัญชีและการเงิน" },
-  { id: "3", name: "การตลาด" },
-  { id: "4", name: "ทรัพยากรบุคคล (HR)" },
-];
-
-// ใช้ตอนดึง API พนักงาน/ช่างไม่สำเร็จ (dev เดี่ยว/backend ยังไม่พร้อม)
-const FALLBACK_EMPLOYEES = [
-  { id: "e1", name: "สมชาย ใจดี" },
-  { id: "e2", name: "วรรณา พงษ์ศิริ" },
-  { id: "e3", name: "ธีรพงษ์ วัฒนา" },
 ];
 
 const FALLBACK_TECHNICIANS = [
@@ -40,57 +25,162 @@ const TITLE_OPTIONS = [
   "อื่นๆ",
 ];
 
-const initialFormData = {
-  reporter_name: "",
-  title: "",
-  department_id: "1",
-  location: "",
-  device_name: "",
-  contact_phone: "",
-  description: "",
-  assignee_id: "",
-  due_date: "",
-  priority: "MEDIUM",
-};
+const CUSTOM_LOCATION = "__custom__";
 
 function CreateTicket() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState(initialFormData);
+  const { ticketId } = useParams();
+  const isEditMode = Boolean(ticketId);
+  const currentUser = JSON.parse(localStorage.getItem("user")) || {};
+
+  const [formData, setFormData] = useState({
+    reporter_name:
+      currentUser.name || currentUser.full_name || currentUser.username || "",
+    title: "",
+    department_id: currentUser.department_id || "1",
+    location: "",
+    device_name: "",
+    contact_phone: currentUser.phone || currentUser.contact_phone || "",
+    description: "",
+    department_name: "",
+    assignee_id: "",
+    due_date: "",
+    priority: "MEDIUM",
+  });
   const [errors, setErrors] = useState({});
   const [imageFile, setImageFile] = useState(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingTicket, setIsLoadingTicket] = useState(isEditMode);
   const [feedback, setFeedback] = useState(null);
 
-  const [employees, setEmployees] = useState(FALLBACK_EMPLOYEES);
+  const [departments, setDepartments] = useState([]);
   const [technicians, setTechnicians] = useState(FALLBACK_TECHNICIANS);
+  const [categories, setCategories] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [locationChoice, setLocationChoice] = useState("");
 
-  // ดึงรายชื่อพนักงาน/ช่างจาก backend ถ้ามี endpoint พร้อมแล้ว
   useEffect(() => {
     const token = localStorage.getItem("token");
+    if (!token) return;
+
     const headers = { Authorization: `Bearer ${token}` };
 
-    fetch("http://localhost:5000/api/users?role=employee", { headers })
-      .then((res) => (res.ok ? res.json() : Promise.reject()))
-      .then((data) => Array.isArray(data) && data.length && setEmployees(data))
-      .catch(() => {
-        /* ใช้ FALLBACK_EMPLOYEES ต่อไปถ้า endpoint นี้ยังไม่พร้อม */
-      });
+    fetch("http://localhost:5000/api/users/me", { headers })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((userData) => {
+        if (userData) {
+          setFormData((prev) => ({
+            ...prev,
+            contact_phone:
+              userData.phone ||
+              userData.contact_phone ||
+              userData.phone_number ||
+              prev.contact_phone,
+            department_id: userData.department_id || prev.department_id,
+            department_name: userData.department_name || prev.department_name,
+          }));
+        }
+      })
+      .catch((err) => console.error("Error fetching user profile:", err));
 
-    fetch("http://localhost:5000/api/users?role=technician", { headers })
+    fetch("http://localhost:5000/api/departments", { headers })
       .then((res) => (res.ok ? res.json() : Promise.reject()))
-      .then(
-        (data) => Array.isArray(data) && data.length && setTechnicians(data),
-      )
-      .catch(() => {
-        /* ใช้ FALLBACK_TECHNICIANS ต่อไปถ้า endpoint นี้ยังไม่พร้อม */
-      });
+      .then((data) => Array.isArray(data) && setDepartments(data))
+      .catch(() => {});
+
+    fetch("http://localhost:5000/api/users/technicians", { headers })
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((data) => Array.isArray(data) && data.length && setTechnicians(data))
+      .catch(() => {});
+
+    fetch("http://localhost:5000/api/categories", { headers })
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((data) => Array.isArray(data) && data.length && setCategories(data))
+      .catch(() => {});
+
+    fetch("http://localhost:5000/api/locations", { headers })
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((data) => Array.isArray(data) && data.length && setLocations(data))
+      .catch(() => {});
   }, []);
 
-  // เคลียร์ URL ของรูปพรีวิวตอน unmount กันหน่วยความจำรั่ว
+  useEffect(() => {
+    if (!ticketId) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    const loadTicket = async () => {
+      setIsLoadingTicket(true);
+      setFeedback(null);
+
+      try {
+        const res = await fetch(`http://localhost:5000/api/tickets/${ticketId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.message || "ไม่สามารถโหลดข้อมูลใบแจ้งซ่อมได้");
+        }
+
+        const existingImage = data.image_url;
+        if (existingImage) {
+          const preview = /^https?:\/\//i.test(existingImage)
+            ? existingImage
+            : `http://localhost:5000/${String(existingImage).replace(/\\/g, "/")}`;
+          setImagePreviewUrl(preview);
+        }
+
+        setFormData({
+          reporter_name: data.reporter_name || "",
+          title: data.title || "",
+          department_id: data.department_id || "",
+          location: data.location || "",
+          device_name: data.device_name || "",
+          contact_phone: data.contact_phone || "",
+          description: data.description || "",
+          department_name: data.department_name || "",
+          assignee_id: data.technician_id || data.assignee_id || "",
+          due_date: data.due_date || "",
+          priority: data.priority || "MEDIUM",
+        });
+      } catch (error) {
+        setFeedback({
+          type: "error",
+          message: error.message || "ไม่สามารถโหลดข้อมูลใบแจ้งซ่อมได้",
+        });
+      } finally {
+        setIsLoadingTicket(false);
+      }
+    };
+
+    loadTicket();
+  }, [ticketId, navigate]);
+
+  useEffect(() => {
+    if (!isEditMode || !formData.location) {
+      if (!isEditMode) {
+        setLocationChoice("");
+      }
+      return;
+    }
+
+    const isKnownLocation = locations.some((loc) => loc.name === formData.location);
+    setLocationChoice(isKnownLocation ? formData.location : CUSTOM_LOCATION);
+  }, [isEditMode, formData.location, locations]);
+
   useEffect(() => {
     return () => {
-      if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+      if (imagePreviewUrl && imagePreviewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(imagePreviewUrl);
+      }
     };
   }, [imagePreviewUrl]);
 
@@ -106,16 +196,50 @@ function CreateTicket() {
     setFormData((prev) => ({ ...prev, priority: value }));
   };
 
+  const handleLocationChange = (e) => {
+    const value = e.target.value;
+    setLocationChoice(value);
+    setFormData((prev) => ({
+      ...prev,
+      location: value === CUSTOM_LOCATION ? "" : value,
+    }));
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
+
+    const MAX_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      setFeedback({
+        type: "error",
+        message: "ไฟล์รูปมีขนาดใหญ่เกิน 5MB",
+      });
+      e.target.value = "";
+      return;
+    }
+    if (!/^image\//i.test(file.type)) {
+      setFeedback({
+        type: "error",
+        message: "รองรับเฉพาะไฟล์รูปภาพ (PNG, JPEG, GIF, WebP)",
+      });
+      e.target.value = "";
+      return;
+    }
+
+    setFeedback(null);
     setImageFile(file);
+    if (imagePreviewUrl && imagePreviewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
     setImagePreviewUrl(URL.createObjectURL(file));
   };
 
   const handleRemoveImage = () => {
     setImageFile(null);
-    if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+    if (imagePreviewUrl && imagePreviewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
     setImagePreviewUrl(null);
   };
 
@@ -144,19 +268,28 @@ function CreateTicket() {
 
     setIsSubmitting(true);
     const token = localStorage.getItem("token");
-
     const payload = new FormData();
-    Object.keys(formData).forEach((key) => payload.append(key, formData[key]));
+
+    Object.keys(formData).forEach((key) => {
+      if (formData[key] !== null && formData[key] !== undefined) {
+        payload.append(key, formData[key]);
+      }
+    });
+
     if (imageFile) {
       payload.append("image", imageFile);
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/tickets", {
-        method: "POST",
+      const endpoint = isEditMode
+        ? `http://localhost:5000/api/tickets/${ticketId}`
+        : "http://localhost:5000/api/tickets";
+      const method = isEditMode ? "PUT" : "POST";
+
+      const res = await fetch(endpoint, {
+        method,
         headers: {
           Authorization: `Bearer ${token}`,
-          // หมายเหตุ: เมื่อใช้ FormData ห้ามใส่ Content-Type: application/json เอง
         },
         body: payload,
       });
@@ -166,16 +299,21 @@ function CreateTicket() {
       if (res.ok) {
         setFeedback({
           type: "success",
-          message: `แจ้งซ่อมสำเร็จ! รหัสใบแจ้งซ่อม: ${data.ticketNo}`,
+          message: isEditMode
+            ? "บันทึกการแก้ไขใบแจ้งซ่อมสำเร็จ"
+            : `แจ้งซ่อมสำเร็จ! รหัสใบแจ้งซ่อม: ${data.ticketNo}`,
         });
-        setTimeout(() => navigate("/dashboard"), 1200);
+
+        setTimeout(() => {
+          navigate(isEditMode ? "/ticketlist" : "/dashboard");
+        }, 1000);
       } else {
         setFeedback({
           type: "error",
-          message: data.message || "เกิดข้อผิดพลาดในการแจ้งซ่อม",
+          message: data.message || "เกิดข้อผิดพลาด",
         });
       }
-    } catch (error) {
+    } catch {
       setFeedback({
         type: "error",
         message: "ไม่สามารถเชื่อมต่อ Server ได้",
@@ -190,9 +328,13 @@ function CreateTicket() {
       <main className="createTicket-content">
         <div className="createTicket-card">
           <div className="createTicket-header">
-            <h1 className="createTicket-title">สร้างใบแจ้งซ่อมใหม่</h1>
+            <h1 className="createTicket-title">
+              {isEditMode ? "ดู/แก้ไขใบแจ้งซ่อม" : "สร้างใบแจ้งซ่อมใหม่"}
+            </h1>
             <p className="createTicket-subtitle">
-              กรอกรายละเอียดปัญหากรณีเครื่องคอมพิวเตอร์หรืออุปกรณ์ชำรุด
+              {isEditMode
+                ? "ตรวจสอบและปรับปรุงรายละเอียดใบแจ้งซ่อมได้ที่นี่"
+                : "กรอกรายละเอียดปัญหากรณีเครื่องคอมพิวเตอร์หรืออุปกรณ์ชำรุด"}
             </p>
           </div>
 
@@ -205,12 +347,13 @@ function CreateTicket() {
             </p>
           )}
 
-          <form
-            className="createTicket-form"
-            onSubmit={handleSubmit}
-            noValidate
-          >
-            {/* ผู้แจ้ง (autocomplete จากรายชื่อพนักงาน) */}
+          {isEditMode && isLoadingTicket && (
+            <p className="createTicket-feedback createTicket-feedback--info">
+              กำลังโหลดรายละเอียดใบแจ้งซ่อม...
+            </p>
+          )}
+
+          <form className="createTicket-form" onSubmit={handleSubmit} noValidate>
             <div className="createTicket-field">
               <label className="createTicket-label" htmlFor="reporter_name">
                 ชื่อผู้แจ้งซ่อม <span className="createTicket-required">*</span>
@@ -219,18 +362,12 @@ function CreateTicket() {
                 id="reporter_name"
                 type="text"
                 name="reporter_name"
-                list="reporter-options"
                 value={formData.reporter_name}
                 onChange={handleChange}
-                placeholder="พิมพ์เพื่อค้นหาชื่อพนักงาน..."
+                placeholder="ดึงชื่อจากระบบอัตโนมัติ..."
                 className="createTicket-input"
                 aria-invalid={Boolean(errors.reporter_name)}
               />
-              <datalist id="reporter-options">
-                {employees.map((emp) => (
-                  <option key={emp.id} value={emp.name} />
-                ))}
-              </datalist>
               {errors.reporter_name && (
                 <span className="createTicket-fieldError">
                   {errors.reporter_name}
@@ -238,7 +375,6 @@ function CreateTicket() {
               )}
             </div>
 
-            {/* หัวข้อปัญหา */}
             <div className="createTicket-field">
               <label className="createTicket-label" htmlFor="title">
                 หัวข้อปัญหา <span className="createTicket-required">*</span>
@@ -254,36 +390,43 @@ function CreateTicket() {
                 <option value="" disabled hidden>
                   -- กรุณาเลือกหัวข้อปัญหา --
                 </option>
-                {TITLE_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
+                {categories.length
+                  ? categories.map((cat) => (
+                      <option key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))
+                  : TITLE_OPTIONS.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
               </select>
               {errors.title && (
                 <span className="createTicket-fieldError">{errors.title}</span>
               )}
             </div>
 
-            {/* แผนก + มอบหมายช่าง */}
             <div className="createTicket-fieldRow">
               <div className="createTicket-field">
-                <label className="createTicket-label" htmlFor="department_id">
+                <label className="createTicket-label" htmlFor="department_name">
                   แผนก / ฝ่าย
                 </label>
-                <select
-                  id="department_id"
-                  name="department_id"
-                  value={formData.department_id}
-                  onChange={handleChange}
-                  className="createTicket-input createTicket-select"
-                >
-                  {DEPARTMENTS.map((dept) => (
-                    <option key={dept.id} value={dept.id}>
-                      {dept.name}
-                    </option>
-                  ))}
-                </select>
+                <input
+                  id="department_name"
+                  type="text"
+                  name="department_name"
+                  value={
+                    departments.find(
+                      (d) => String(d.id) === String(formData.department_id),
+                    )?.name ||
+                    formData.department_name ||
+                    "ไม่ระบุแผนก"
+                  }
+                  readOnly
+                  className="createTicket-input"
+                  style={{ backgroundColor: "#f3f4f6", cursor: "not-allowed" }}
+                />
               </div>
 
               <div className="createTicket-field">
@@ -307,21 +450,38 @@ function CreateTicket() {
               </div>
             </div>
 
-            {/* สถานที่ + อุปกรณ์ */}
             <div className="createTicket-fieldRow">
               <div className="createTicket-field">
                 <label className="createTicket-label" htmlFor="location">
                   สถานที่ / ห้อง / ชั้น
                 </label>
-                <input
+                <select
                   id="location"
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  placeholder="เช่น อาคาร A ชั้น 3 ห้อง 302"
-                  className="createTicket-input"
-                />
+                  value={locationChoice}
+                  onChange={handleLocationChange}
+                  className="createTicket-input createTicket-select"
+                >
+                  <option value="" disabled hidden>
+                    -- กรุณาเลือกสถานที่ --
+                  </option>
+                  {locations.map((loc) => (
+                    <option key={loc.id} value={loc.name}>
+                      {loc.name}
+                    </option>
+                  ))}
+                  <option value={CUSTOM_LOCATION}>สถานที่อื่น ๆ (พิมพ์เอง)</option>
+                </select>
+                {locationChoice === CUSTOM_LOCATION && (
+                  <input
+                    id="location_custom"
+                    type="text"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleChange}
+                    placeholder="เช่น อาคาร A ชั้น 3 ห้อง 302"
+                    className="createTicket-input createTicket-locationCustom"
+                  />
+                )}
               </div>
 
               <div className="createTicket-field">
@@ -340,7 +500,6 @@ function CreateTicket() {
               </div>
             </div>
 
-            {/* เบอร์ติดต่อ + วันที่ต้องการให้เสร็จ */}
             <div className="createTicket-fieldRow">
               <div className="createTicket-field">
                 <label className="createTicket-label" htmlFor="contact_phone">
@@ -375,7 +534,6 @@ function CreateTicket() {
               </div>
             </div>
 
-            {/* รายละเอียดปัญหา */}
             <div className="createTicket-field">
               <label className="createTicket-label" htmlFor="description">
                 รายละเอียดปัญหา <span className="createTicket-required">*</span>
@@ -397,7 +555,6 @@ function CreateTicket() {
               )}
             </div>
 
-            {/* แนบรูปภาพ + พรีวิว */}
             <div className="createTicket-field">
               <label className="createTicket-label" htmlFor="image">
                 แนบรูปภาพประกอบ (ถ้ามี)
@@ -423,7 +580,6 @@ function CreateTicket() {
               )}
             </div>
 
-            {/* ระดับความเร่งด่วน */}
             <div className="createTicket-field">
               <label className="createTicket-label">ระดับความเร่งด่วน</label>
               <div
@@ -457,10 +613,25 @@ function CreateTicket() {
             <button
               type="submit"
               className="createTicket-submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isLoadingTicket}
             >
-              {isSubmitting ? "กำลังส่งคำขอ..." : "ส่งใบแจ้งซ่อม"}
+              {isSubmitting
+                ? isEditMode
+                  ? "กำลังบันทึก..."
+                  : "กำลังส่งคำขอ..."
+                : isEditMode
+                  ? "บันทึกการแก้ไข"
+                  : "ส่งใบแจ้งซ่อม"}
             </button>
+
+            <div className="createTicket-cancel">
+              <button
+                type="button"
+                onClick={() => navigate(isEditMode ? "/ticketlist" : "/dashboard")}
+              >
+                ยกเลิก
+              </button>
+            </div>
           </form>
         </div>
       </main>

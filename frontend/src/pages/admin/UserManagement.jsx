@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useMemo } from "react";
 import API from "../../services/api";
 import "./UserManagement.css";
+import NotificationBell from "../../components/NotificationBell/NotificationBell";
+import UserMenu from "../../components/Usermenu/Usermenu";
 
 // Minimalist SVG Icons
 const Icons = {
@@ -90,37 +92,65 @@ const ROLE_META = {
 };
 
 export default function UserManagement() {
+  const [user] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "null");
+    } catch (error) {
+      console.error("Failed to parse user data", error);
+      return null;
+    }
+  });
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+  const [savingRoleId, setSavingRoleId] = useState(null);
 
   // Modal State สำหรับเพิ่มผู้ใช้ใหม่
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modalFeedback, setModalFeedback] = useState({ type: "", message: "" });
 
-  const [newUser, setNewUser] = useState({
+  const EMPTY_USER_FORM = {
     name: "",
     email: "",
     password: "",
     department_id: "",
     phone: "",
     role: "user",
-  });
+  };
+
+  const [newUser, setNewUser] = useState(EMPTY_USER_FORM);
+  const [departments, setDepartments] = useState([]);
 
   useEffect(() => {
     fetchUsers();
+    fetchDepartments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // รายชื่อแผนกจริงจาก DB — ใช้กับ dropdown ในโมดัล
+  // (กันปัญหาพิมพ์ชื่อแผนกเองแล้วไม่ตรงกับตาราง → department_id เป็น null เงียบๆ)
+  const fetchDepartments = async () => {
+    try {
+      const res = await API.get("/departments");
+      if (Array.isArray(res.data)) setDepartments(res.data);
+    } catch (err) {
+      console.error("เกิดข้อผิดพลาดในการดึงรายชื่อแผนก:", err);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      setError(null);
       const res = await API.get("/users");
       const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
       setUsers(data);
     } catch (err) {
       console.error("เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้:", err);
+      setError("ไม่สามารถโหลดรายชื่อผู้ใช้ได้ กรุณาลองใหม่อีกครั้ง");
     } finally {
       setLoading(false);
     }
@@ -130,20 +160,19 @@ export default function UserManagement() {
   const stats = useMemo(() => {
     return {
       total: users.length,
-      admin: users.filter((u) => (u.role || "").toLowerCase() === "admin")
+      admin: users.filter((u) => (u.role || "user").toLowerCase() === "admin")
         .length,
-      technician: users.filter(
-        (u) =>
-          (u.role || "").toLowerCase() === "technician" ||
-          (u.role || "").toLowerCase() === "tech",
+      technician: users.filter((u) =>
+        ["technician", "tech"].includes((u.role || "user").toLowerCase()),
       ).length,
       user: users.filter(
-        (u) => (u.role || "").toLowerCase() === "user" || !u.role,
+        (u) => (u.role || "user").toLowerCase() === "user" || !u.role,
       ).length,
     };
   }, [users]);
 
   // กรองผู้ใช้จาก Search และ Role
+  // หมายเหตุ: ห้ามเรียก .toLowerCase() กับ department_id (เป็นตัวเลข → ทำให้หน้าพัง)
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
       const q = searchTerm.toLowerCase().trim();
@@ -153,10 +182,16 @@ export default function UserManagement() {
         !q ||
         (u.name && u.name.toLowerCase().includes(q)) ||
         (u.email && u.email.toLowerCase().includes(q)) ||
-        (u.phone && u.phone.toLowerCase().includes(q)) ||
-        (u.department_id && u.department_id.toLowerCase().includes(q));
+        (u.phone && String(u.phone).toLowerCase().includes(q)) ||
+        (u.department_name &&
+          u.department_name.toLowerCase().includes(q)) ||
+        (u.department && String(u.department).toLowerCase().includes(q)) ||
+        (u.role && u.role.toLowerCase().includes(q));
 
-      const matchRole = roleFilter === "all" || role === roleFilter;
+      const matchRole =
+        roleFilter === "all" ||
+        role === roleFilter ||
+        (roleFilter === "technician" && role === "tech");
 
       return matchSearch && matchRole;
     });
@@ -192,14 +227,7 @@ export default function UserManagement() {
       await API.post("/users", newUser);
 
       // ล้างฟอร์ม ปิด Modal และโหลดรายการใหม่
-      setNewUser({
-        name: "",
-        email: "",
-        password: "",
-        department_id: "",
-        phone: "",
-        role: "user",
-      });
+      setNewUser(EMPTY_USER_FORM);
       setIsModalOpen(false);
       fetchUsers();
     } catch (err) {
@@ -214,13 +242,18 @@ export default function UserManagement() {
     }
   };
 
-  // ลบผู้ใช้
+  // ลบผู้ใช้ (กันลบบัญชีตัวเอง + เตือนว่ารายการแจ้งซ่อมของผู้ใช้นี้จะถูกลบตามด้วย)
   const handleDeleteUser = async (id, name) => {
-    if (
-      !window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบบัญชี "${name}" ออกจากระบบ?`)
-    ) {
+    if (id === user?.id) {
+      alert("ไม่สามารถลบบัญชีของตัวเองได้");
       return;
     }
+
+    const confirmed = window.confirm(
+      `คุณแน่ใจหรือไม่ว่าต้องการลบบัญชี "${name}" ออกจากระบบ?\n` +
+        "หมายเหตุ: รายการแจ้งซ่อมของผู้ใช้นี้จะถูกลบออกจากระบบด้วย",
+    );
+    if (!confirmed) return;
 
     try {
       await API.delete(`/users/${id}`);
@@ -230,28 +263,67 @@ export default function UserManagement() {
     }
   };
 
+  // เปลี่ยนสิทธิ์ผู้ใช้ (บันทึกทันทีที่เลือก)
+  const handleChangeRole = async (id, nextRole) => {
+    if (id === user?.id) {
+      alert("ไม่สามารถเปลี่ยนสิทธิ์ของบัญชีตัวเองได้");
+      return;
+    }
+
+    setSavingRoleId(id);
+    try {
+      await API.patch(`/admin/users/${id}/role`, { role: nextRole });
+      setUsers((prev) =>
+        prev.map((u) => (u.id === id ? { ...u, role: nextRole } : u)),
+      );
+    } catch (err) {
+      alert(err.response?.data?.message || "ไม่สามารถเปลี่ยนสิทธิ์ได้");
+      fetchUsers(); // คืนค่าเดิมจาก Server
+    } finally {
+      setSavingRoleId(null);
+    }
+  };
+
   return (
     <div className="userMgmt-container">
       {/* 1. Header & New User Button */}
+      {/* แถวหัว: หัวข้อซ้าย / กระดิ่ง+โปรไฟล์ขวา */}
       <div className="userMgmt-topbar">
-        <div className="userMgmt-headerInfo">
-          <h1 className="userMgmt-title">จัดการผู้ใช้งานระบบ</h1>
-          <p className="userMgmt-subtitle">
-            จัดการข้อมูลบัญชี กำหนดสิทธิ์ และเพิ่มผู้ใช้งานในระบบ
-          </p>
+  <div className="userMgmt-headerInfo">
+    <h1 className="userMgmt-title">จัดการผู้ใช้งานระบบ</h1>
+    <p className="userMgmt-subtitle">จัดการข้อมูลบัญชี กำหนดสิทธิ์ และเพิ่มผู้ใช้งานในระบบ</p>
+  </div>
+
+  <div className="userMgmt-topActions">
+    <button
+      type="button"
+      className="userMgmt-newBtn"
+      onClick={() => {
+        setModalFeedback({ type: "", message: "" });
+        setIsModalOpen(true);
+      }}
+    >
+      <Icons.Plus />
+      <span>เพิ่มบัญชีผู้ใช้</span>
+    </button>
+    <div className="userMgmt-accountGroup">
+      <NotificationBell onSelect={(item) => console.log(item)} />
+      <UserMenu user={user} />
+    </div>
+  </div>
+</div>
+
+<div className="userMgmt-divider-full" />
+{/* การ์ดสถิติ ... เลย ไม่มีแถวปุ่มใต้เส้น */}
+
+      {error && (
+        <div className="userMgmt-errorBanner" role="alert">
+          <span>{error}</span>
+          <button type="button" onClick={fetchUsers}>
+            ลองใหม่
+          </button>
         </div>
-        <button
-          type="button"
-          className="userMgmt-newBtn"
-          onClick={() => {
-            setModalFeedback({ type: "", message: "" });
-            setIsModalOpen(true);
-          }}
-        >
-          <Icons.Plus />
-          <span>เพิ่มบัญชีผู้ใช้</span>
-        </button>
-      </div>
+      )}
 
       {/* 2. Stat Cards สรุปยอดผู้ใช้ */}
       <div className="userMgmt-stats">
@@ -346,7 +418,7 @@ export default function UserManagement() {
         <div className="userMgmt-tableWrapper">
           {loading ? (
             <div className="userMgmt-stateContainer">
-              <div className="spinner"></div>
+              <div className="userMgmt-spinner" />
               <p>กำลังโหลดข้อมูลผู้ใช้...</p>
             </div>
           ) : filteredUsers.length === 0 ? (
@@ -362,18 +434,20 @@ export default function UserManagement() {
                   <th>อีเมล</th>
                   <th>แผนก / เบอร์โทร</th>
                   <th>สิทธิ์การใช้งาน</th>
-                  <th style={{ textAlign: "right" }}>จัดการ</th>
+                  <th style={{ textAlign: "right" }}>จัดการ (เปลี่ยนสิทธิ์ / ลบ)</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((u) => {
+                {filteredUsers.map((u, index) => {
+                  // 🟢 1. รับ index เพิ่มตรงนี้
                   const roleKey = (u.role || "user").toLowerCase();
                   const initial = u.name
                     ? u.name.trim().charAt(0).toUpperCase()
                     : "U";
                   return (
                     <tr key={u.id} className="userMgmt-tr">
-                      <td className="userMgmt-tdMono">#{u.id}</td>
+                      {/* 🟢 2. เปลี่ยนจาก #{u.id} เป็น #{index + 1} */}
+                      <td className="userMgmt-tdMono">#{index + 1}</td>
                       <td>
                         <div className="userMgmt-userCell">
                           <div className="userMgmt-avatar">{initial}</div>
@@ -385,7 +459,10 @@ export default function UserManagement() {
                       <td className="userMgmt-tdMuted">{u.email}</td>
                       <td>
                         <div className="userMgmt-deptCell">
-                          <span>{u.department ||""}</span>
+                          {/* 🟢 3. ดึง department_name มาแสดงก่อน */}
+                          <span>
+                            {u.department_name || u.department || "-"}
+                          </span>
                           {u.phone && (
                             <span className="userMgmt-phone">{u.phone}</span>
                           )}
@@ -398,18 +475,39 @@ export default function UserManagement() {
                           {(u.role || "user").toUpperCase()}
                         </span>
                       </td>
-                      <td style={{ textAlign: "right" }}>
-                        <button
-                          type="button"
-                          className="userMgmt-actionBtn userMgmt-actionBtn--delete"
-                          onClick={() =>
-                            handleDeleteUser(u.id, u.name || u.email, u.phone)
-                          }
-                          title="ลบบัญชีนี้"
-                        >
-                          <Icons.Trash />
-                          <span>ลบ</span>
-                        </button>
+                      <td>
+                        <div className="userMgmt-actionGroup">
+                          <select
+                            className="userMgmt-roleSelect"
+                            value={roleKey === "tech" ? "technician" : roleKey}
+                            disabled={savingRoleId === u.id || u.id === user?.id}
+                            onChange={(e) => handleChangeRole(u.id, e.target.value)}
+                            title={
+                              u.id === user?.id
+                                ? "ไม่สามารถเปลี่ยนสิทธิ์บัญชีตัวเอง"
+                                : "เปลี่ยนสิทธิ์การใช้งาน"
+                            }
+                          >
+                            <option value="user">USER</option>
+                            <option value="technician">TECHNICIAN</option>
+                            <option value="admin">ADMIN</option>
+                          </select>
+
+                          <button
+                            type="button"
+                            className="userMgmt-actionBtn userMgmt-actionBtn--delete"
+                            onClick={() => handleDeleteUser(u.id, u.name || u.email)}
+                            disabled={u.id === user?.id}
+                            title={
+                              u.id === user?.id
+                                ? "ไม่สามารถลบบัญชีตัวเอง"
+                                : "ลบบัญชีนี้"
+                            }
+                          >
+                            <Icons.Trash />
+                            <span>ลบ</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -521,16 +619,20 @@ export default function UserManagement() {
               <div className="userMgmt-fieldRow">
                 <div className="userMgmt-field">
                   <label className="userMgmt-label">แผนก / ฝ่าย</label>
-                  <input
-                    type="text"
-                    name="department"
-                    placeholder="เช่น ฝ่ายไอที, การเงิน"
-                    value={newUser.department}
+                  <select
+                    name="department_id"
+                    value={newUser.department_id}
                     onChange={handleInputChange}
                     className="userMgmt-input"
-                  />
-                </div>
-                <div className="userMgmt-field">
+                  >
+                    <option value="">ไม่ระบุแผนก</option>
+                    {departments.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>                <div className="userMgmt-field">
                   <label className="userMgmt-label">เบอร์โทรศัพท์</label>
                   <input
                     type="tel"

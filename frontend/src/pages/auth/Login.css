@@ -171,6 +171,7 @@
 }
 
 .loginPage-forgotLink {
+  margin-left: auto; 
   font-size: 12px;
   color: var(--color-red);
   text-decoration: none;

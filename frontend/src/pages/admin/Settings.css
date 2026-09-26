@@ -493,26 +493,27 @@
   .settings-tabBtn {
     white-space: nowrap;
   }
-  .settings-card {
-    min-height: auto; /* บนจอมือถือให้ยืดหยุ่นตามเนื้อหา */
+  /* .settings-card {
+    min-height: auto; 
   }
-}
+} */
 
-@media (max-width: 580px) {
-  .settings {
-    padding: 20px 14px;
-  }
-  .settings-card {
-    padding: 20px 16px;
-  }
-  .settings-fieldRow {
-    grid-template-columns: 1fr;
-  }
-  .settings-formFooter {
-    flex-direction: column-reverse;
-  }
-  .settings-submit,
-  .settings-btn-cancel {
-    width: 100%;
+  @media (max-width: 580px) {
+    .settings {
+      padding: 20px 14px;
+    }
+    .settings-card {
+      padding: 20px 16px;
+    }
+    .settings-fieldRow {
+      grid-template-columns: 1fr;
+    }
+    .settings-formFooter {
+      flex-direction: column-reverse;
+    }
+    .settings-submit,
+    .settings-btn-cancel {
+      width: 100%;
+    }
   }
 }

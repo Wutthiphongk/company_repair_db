@@ -19,8 +19,11 @@ export const verifyToken = (req, res, next) => {
 };
 
 // 2. ฟังก์ชันเช็คว่าเป็น Admin หรือไม่
+//    หมายเหตุ: DB เก็บ role เป็นตัวพิมพ์ใหญ่ (ADMIN) แต่ข้อมูลเก่าอาจเป็นเล็ก
+//              จึงเทียบแบบไม่สนตัวพิมพ์
 export const isAdmin = (req, res, next) => {
-  if (req.user && req.user.role === "admin") {
+  const role = String(req.user?.role || "").toUpperCase();
+  if (role === "ADMIN") {
     next();
   } else {
     return res

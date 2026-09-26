@@ -1,19 +1,56 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../../services/api";
-import "./dashboard.css";
+import "./Dashboard.css";
+import NotificationBell from "../../components/NotificationBell/NotificationBell";
+import UserMenu from "../../components/Usermenu/Usermenu";
+import { Plus } from "lucide-react";
 
+// 1. ปรับ Key ให้เป็นตัวพิมพ์ใหญ่ตามค่าจริงที่ DB/API ส่งมา
+//    (PENDING, IN_PROGRESS, COMPLETED, CANCELLED)
 const STATUS_META = {
-  pending: { label: "รอดำเนินการ" },
-  progress: { label: "กำลังซ่อม" },
-  done: { label: "เสร็จสิ้น" },
+  PENDING: { label: "รอดำเนินการ", cls: "pending" },
+  ASSIGNED: { label: "มอบหมายช่างแล้ว", cls: "progress" },
+  IN_PROGRESS: { label: "กำลังดำเนินการ", cls: "progress" },
+  COMPLETED: { label: "เสร็จสิ้น", cls: "done" },
+  CANCELLED: { label: "ยกเลิก", cls: "cancel" },
+};
+
+// ค่าสถานะรูปแบบเก่า/ตัวพิมพ์เล็กที่อาจยังค้างอยู่ → แปลงเป็นค่ามาตรฐาน
+const STATUS_ALIAS = {
+  PENDING: "PENDING",
+  ASSIGNED: "ASSIGNED",
+  PROGRESS: "IN_PROGRESS",
+  IN_PROGRESS: "IN_PROGRESS",
+  DONE: "COMPLETED",
+  COMPLETED: "COMPLETED",
+  CANCEL: "CANCELLED",
+  CANCELED: "CANCELLED",
+  CANCELLED: "CANCELLED",
+};
+
+const normalizeStatus = (status) => {
+  if (!status) return "";
+  const key = String(status).trim().toUpperCase().replace(/\s+/g, "_");
+  return STATUS_ALIAS[key] || key;
+};
+
+// Helper ฟังก์ชันสำหรับดึงข้อมูลสถานะภาษาไทยแบบปลอดภัย
+const getStatusLabel = (status) => {
+  if (!status) return "ไม่ระบุ";
+  return STATUS_META[normalizeStatus(status)]?.label || status;
+};
+
+// Helper สำหรับดึง Class Badge ให้ตรงกับ CSS (.dashboard-badge--xxx)
+const getStatusClass = (status) => {
+  const cls = STATUS_META[normalizeStatus(status)]?.cls;
+  return cls ? `dashboard-badge--${cls}` : "";
 };
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
 
-  // State สำหรับเก็บข้อมูลจริงจาก API
   const [tickets, setTickets] = useState([]);
   const [stats, setStats] = useState({
     total: 0,
@@ -22,6 +59,36 @@ export default function Dashboard() {
     done: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchTickets = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await API.get("/tickets");
+      const data = res.data || [];
+      setTickets(data);
+
+      const total = data.length;
+      const pending = data.filter(
+        (t) => normalizeStatus(t.status) === "PENDING",
+      ).length;
+      // ASSIGNED + IN_PROGRESS = งานที่ช่างกำลังดูแลอยู่
+      const progress = data.filter((t) =>
+        ["ASSIGNED", "IN_PROGRESS"].includes(normalizeStatus(t.status)),
+      ).length;
+      const done = data.filter(
+        (t) => normalizeStatus(t.status) === "COMPLETED",
+      ).length;
+
+      setStats({ total, pending, progress, done });
+    } catch (err) {
+      console.error("เกิดข้อผิดพลาดในการดึงข้อมูลงานซ่อม:", err);
+      setError("ไม่สามารถโหลดข้อมูลงานซ่อมได้ กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -41,31 +108,11 @@ export default function Dashboard() {
     }
 
     fetchTickets();
-  }, [navigate]);
-
-  const fetchTickets = async () => {
-    try {
-      setLoading(true);
-      const res = await API.get("/tickets");
-      const data = res.data || [];
-      setTickets(data);
-
-      // คำนวณสรุปจำนวนงาน (Stats)
-      const total = data.length;
-      const pending = data.filter((t) => t.status === "pending").length;
-      const progress = data.filter((t) => t.status === "progress").length;
-      const done = data.filter((t) => t.status === "done").length;
-
-      setStats({ total, pending, progress, done });
-    } catch (err) {
-      console.error("เกิดข้อผิดพลาดในการดึงข้อมูลงานซ่อม:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [navigate, fetchTickets]);
 
   return (
     <div className="dashboard-container">
+      {/* ---------- Header Topbar ---------- */}
       <header className="dashboard-topbar">
         <div>
           <h1 className="dashboard-title">ภาพรวมงานซ่อมบำรุง</h1>
@@ -74,16 +121,40 @@ export default function Dashboard() {
             นี่คือสรุปงานล่าสุดของคุณ
           </p>
         </div>
-        <button
-          type="button"
-          className="dashboard-newTicketBtn"
-          onClick={() => navigate("/create-ticket")}
-        >
-          + แจ้งซ่อมใหม่
-        </button>
+
+        {/* ✅ กลุ่มด้านขวา: ปุ่ม + กระดิ่ง + โปรไฟล์ อยู่แถวเดียวกัน */}
+        <div className="dashboard-topActions">
+          {user?.role?.toUpperCase() !== "TECHNICIAN" && (
+            <button
+              type="button"
+              className="dashboard-newTicketBtn"
+              onClick={() => navigate("/create-ticket")}
+            >
+              <Plus size={18} />
+              <span>แจ้งซ่อมใหม่</span>
+            </button>
+          )}
+          <div className="dashboard-accountGroup">
+            <NotificationBell onSelect={(item) => console.log(item)} />
+            <UserMenu user={user} />
+          </div>
+        </div>
       </header>
 
-      {/* สรุปจำนวนงาน */}
+      {/* เส้นคั่น → ตามด้วยการ์ดสถิติเลย ไม่มีแถวปุ่มคั่นแล้ว */}
+      <div className="dashboard-headerDivider" />
+
+      {/* การ์ดสถิติ / ตาราง ... โค้ดเดิมของคุณ */}
+
+      {error && (
+        <div className="dashboard-errorBanner" role="alert">
+          <span>{error}</span>
+          <button type="button" onClick={fetchTickets}>
+            ลองใหม่
+          </button>
+        </div>
+      )}
+
       <section className="dashboard-stats" aria-label="สรุปจำนวนงาน">
         <div className="dashboard-statCard">
           <span className="dashboard-statValue">{stats.total}</span>
@@ -95,7 +166,7 @@ export default function Dashboard() {
         </div>
         <div className="dashboard-statCard">
           <span className="dashboard-statValue">{stats.progress}</span>
-          <span className="dashboard-statLabel">กำลังซ่อม</span>
+          <span className="dashboard-statLabel">กำลังดำเนินการ</span>
         </div>
         <div className="dashboard-statCard">
           <span className="dashboard-statValue">{stats.done}</span>
@@ -103,21 +174,38 @@ export default function Dashboard() {
         </div>
       </section>
 
-      {/* ตารางรายการแจ้งซ่อมล่าสุด */}
       <section className="dashboard-ticketSection">
         <div className="dashboard-sectionHeader">
           <h2 className="dashboard-sectionTitle">รายการแจ้งซ่อมล่าสุด</h2>
+          <button
+            type="button"
+            className="dashboard-viewAll"
+            onClick={() => navigate("/ticketlist")}
+          >
+            ดูทั้งหมด
+          </button>
         </div>
 
         <div className="dashboard-tableWrap">
           {loading ? (
-            <p style={{ padding: "20px", textAlign: "center" }}>
-              กำลังโหลดข้อมูล...
-            </p>
+            <div className="dashboard-skeleton">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div className="dashboard-skeletonRow" key={i} />
+              ))}
+            </div>
           ) : tickets.length === 0 ? (
-            <p style={{ padding: "20px", textAlign: "center" }}>
-              ยังไม่มีรายการแจ้งซ่อมในระบบ
-            </p>
+            <div className="dashboard-empty">
+              <p className="dashboard-emptyText">
+                ยังไม่มีรายการแจ้งซ่อมในระบบ
+              </p>
+              <button
+                type="button"
+                className="dashboard-emptyBtn"
+                onClick={() => navigate("/create-ticket")}
+              >
+                + แจ้งซ่อมรายการแรก
+              </button>
+            </div>
           ) : (
             <table className="dashboard-table">
               <thead>
@@ -137,15 +225,19 @@ export default function Dashboard() {
                     <td>{ticket.reporter_name || user?.name || "ไม่ระบุ"}</td>
                     <td>
                       <span
-                        className={`dashboard-badge dashboard-badge--${ticket.status}`}
+                        className={`dashboard-badge ${getStatusClass(
+                          ticket.status,
+                        )}`}
                       >
-                        {STATUS_META[ticket.status]?.label || ticket.status}
+                        {getStatusLabel(ticket.status)}
                       </span>
                     </td>
                     <td className="dashboard-tdMuted">
-                      {new Date(
-                        ticket.created_at || Date.now(),
-                      ).toLocaleDateString("th-TH")}
+                      {ticket.created_at
+                        ? new Date(ticket.created_at).toLocaleDateString(
+                            "th-TH",
+                          )
+                        : "-"}
                     </td>
                   </tr>
                 ))}

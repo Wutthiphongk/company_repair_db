@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import API from "../../services/api";
 import "./Login.css";
 
@@ -41,9 +41,7 @@ export default function Login() {
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      alert("เข้าสู่ระบบสำเร็จ!");
-
-      // 3. วาร์ปไปหน้า Dashboard
+      // 3. ทุกบทบาทเข้าหน้า Dashboard เหมือนกัน (เมนูต่างกันตาม Role ใน MainLayout)
       navigate("/dashboard");
     } catch (err) {
       // ดึงข้อความ Error จากหลังบ้านมาแสดง
@@ -155,9 +153,9 @@ export default function Login() {
               />
               <span>จดจำฉันไว้ในระบบ</span>
 
-              <a className="loginPage-forgotLink" href="#forgot-password">
+              <Link className="loginPage-forgotLink" to="/forgotpassword">
                 ลืมรหัสผ่าน?
-              </a>
+              </Link>
             </label>
 
             {/* ปุ่มกด Submit */}
